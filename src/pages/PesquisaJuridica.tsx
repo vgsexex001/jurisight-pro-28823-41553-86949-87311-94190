@@ -1,311 +1,261 @@
-import { useState, useEffect } from 'react';
-import { Brain } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import SearchBar from '@/components/SearchBar';
-import VoiceSearch from '@/components/VoiceSearch';
-import FiltrosAvancados, { Filtros } from '@/components/FiltrosAvancados';
-import ResultadoBusca from '@/components/ResultadoBusca';
-import { resultadosMock } from '@/data/resultadosMock';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { Search, Filter, Sparkles, BookOpen, Scale, FileText, Loader2 } from 'lucide-react';
+import { useLegalSearch } from '@/features/legal-search/hooks/useLegalSearch';
+import { JurisprudenceCard } from '@/features/legal-search/components/JurisprudenceCard';
+import { LegislationCard } from '@/features/legal-search/components/LegislationCard';
+import { AIAnalysisPanel } from '@/features/legal-search/components/AIAnalysisPanel';
+import type { AIAnalysis } from '@/features/legal-search/types/legal-search.types';
+import toast from 'react-hot-toast';
 
 export default function PesquisaJuridica() {
-  const [query, setQuery] = useState('');
-  const [categoria, setCategoria] = useState('tudo');
-  const [resultados, setResultados] = useState(resultadosMock);
-  const [resultadosFiltrados, setResultadosFiltrados] = useState(resultadosMock);
-  const [buscando, setBuscando] = useState(false);
-  const [usarBuscaSemantica, setUsarBuscaSemantica] = useState(false);
-  const [paginaAtual, setPaginaAtual] = useState(1);
-  const { toast } = useToast();
-  const resultadosPorPagina = 10;
+  const {
+    query,
+    setQuery,
+    filters,
+    setFilters,
+    jurisprudence,
+    legislation,
+    isSearching,
+    generateAnalysis,
+    isGenerating
+  } = useLegalSearch();
 
-  const [filtros, setFiltros] = useState<Filtros>({
-    tribunal: [],
-    area: [],
-    tipoDocumento: [],
-    periodo: 'todos',
-    dataInicio: undefined,
-    dataFim: undefined
-  });
+  const [activeTab, setActiveTab] = useState<'all' | 'jurisprudence' | 'legislation'>('all');
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
 
-  const sugestoesPopulares = [
-    'horas extras banco de horas',
-    'dano moral trabalho remoto',
-    'rescisão indireta covid-19',
-    'súmula 443 STJ',
-    'reforma trabalhista terceirização'
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // A busca é automática via React Query quando query muda
+  };
+
+  const handleGenerateAnalysis = async () => {
+    if (!query) {
+      toast.error('Digite uma consulta primeiro');
+      return;
+    }
+
+    if (jurisprudence.length === 0 && legislation.length === 0) {
+      toast.error('Faça uma busca primeiro para ter fontes para a análise');
+      return;
+    }
+
+    try {
+      const result = await generateAnalysis({ searchQuery: query });
+      setAIAnalysis(result);
+      setShowAnalysis(true);
+    } catch (error) {
+      console.error('Erro ao gerar análise:', error);
+    }
+  };
+
+  const popularSearches = [
+    'prescrição quinquenal',
+    'prazo recursal',
+    'dano moral',
+    'execução trabalhista',
+    'reforma trabalhista'
   ];
 
-  const handleSearch = async (searchQuery: string) => {
-    setQuery(searchQuery);
-    setBuscando(true);
-    
-    try {
-      let resultadosBusca = [...resultadosMock];
-
-      if (searchQuery.trim()) {
-        const termos = searchQuery.toLowerCase().split(' ');
-        resultadosBusca = resultadosMock.filter(r =>
-          termos.some(termo =>
-            r.titulo.toLowerCase().includes(termo) ||
-            r.ementa.toLowerCase().includes(termo) ||
-            r.tags.some(tag => tag.toLowerCase().includes(termo))
-          )
-        );
-      }
-
-      setResultados(resultadosBusca);
-      aplicarFiltros(resultadosBusca);
-      
-      toast({
-        title: "Busca concluída",
-        description: `${resultadosBusca.length} resultado(s) encontrado(s)`,
-      });
-    } catch (error) {
-      console.error('Erro na busca:', error);
-      toast({
-        title: "Erro na busca",
-        description: "Ocorreu um erro ao buscar documentos",
-        variant: "destructive",
-      });
-    } finally {
-      setBuscando(false);
-    }
-  };
-
-  const aplicarFiltros = (resultadosBase = resultados) => {
-    let filtrado = [...resultadosBase];
-
-    if (categoria !== 'tudo') {
-      filtrado = filtrado.filter(r => r.tipo === categoria);
-    }
-
-    if (filtros.tribunal.length > 0) {
-      filtrado = filtrado.filter(r => r.tribunal && filtros.tribunal.includes(r.tribunal));
-    }
-
-    if (filtros.area.length > 0) {
-      filtrado = filtrado.filter(r => filtros.area.includes(r.area));
-    }
-
-    if (filtros.tipoDocumento.length > 0) {
-      filtrado = filtrado.filter(r => filtros.tipoDocumento.some(tipo => tipo.toLowerCase() === r.tipo));
-    }
-
-    setResultadosFiltrados(filtrado);
-    setPaginaAtual(1);
-  };
-
-  useEffect(() => {
-    aplicarFiltros();
-  }, [filtros, categoria]);
-
-  const limparFiltros = () => {
-    setFiltros({
-      tribunal: [],
-      area: [],
-      tipoDocumento: [],
-      periodo: 'todos',
-      dataInicio: undefined,
-      dataFim: undefined
-    });
-  };
-
-  const handleAnalisarIA = (id: string) => {
-    toast({
-      title: "Análise com IA",
-      description: `Iniciando análise do documento ${id}...`,
-    });
-  };
-
-  const handleCasosSimilares = (id: string) => {
-    toast({
-      title: "Casos Similares",
-      description: `Buscando casos similares a ${id}...`,
-    });
-  };
-
-  const indiceUltimo = paginaAtual * resultadosPorPagina;
-  const indicePrimeiro = indiceUltimo - resultadosPorPagina;
-  const resultadosAtuais = resultadosFiltrados.slice(indicePrimeiro, indiceUltimo);
-  const totalPaginas = Math.ceil(resultadosFiltrados.length / resultadosPorPagina);
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Pesquisa Jurídica</h1>
-      <p className="text-muted-foreground mb-6">Busca inteligente em milhões de documentos jurídicos</p>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-primary-50/10">
+      {/* Header */}
+      <div className="border-b border-neutral-200 bg-white/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-neutral-900 flex items-center gap-3">
+                <Search className="w-8 h-8 text-primary-600" />
+                Pesquisa Jurídica
+              </h1>
+              <p className="text-neutral-600 mt-1">
+                Busca inteligente em jurisprudência e legislação
+              </p>
+            </div>
 
-      {/* Barra de busca */}
-      <div className="bg-card rounded-lg shadow-lg p-6 mb-6 border border-border">
-        <SearchBar onSearch={handleSearch} />
-
-        <div className="flex gap-2 mt-4 mb-4 flex-wrap">
-          <Button
-            onClick={() => setUsarBuscaSemantica(!usarBuscaSemantica)}
-            variant={usarBuscaSemantica ? "default" : "outline"}
-            className={usarBuscaSemantica ? "" : "border-purple-600 text-purple-600 hover:bg-purple-50"}
-          >
-            <Brain className="w-4 h-4 mr-2" />
-            Busca Semântica (IA)
-          </Button>
-          <VoiceSearch onResult={handleSearch} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <select 
-            value={filtros.tribunal[0] || ''}
-            onChange={(e) => setFiltros({...filtros, tribunal: e.target.value ? [e.target.value] : []})}
-            className="px-3 py-2 border rounded-lg bg-background"
-          >
-            <option value="">Tribunal</option>
-            <option value="STF">STF</option>
-            <option value="STJ">STJ</option>
-            <option value="TST">TST</option>
-            <option value="TJSP">TJSP</option>
-            <option value="TRT 2ª">TRT 2ª</option>
-          </select>
-          
-          <select 
-            value={filtros.area[0] || ''}
-            onChange={(e) => setFiltros({...filtros, area: e.target.value ? [e.target.value] : []})}
-            className="px-3 py-2 border rounded-lg bg-background"
-          >
-            <option value="">Área do Direito</option>
-            <option value="Trabalhista">Trabalhista</option>
-            <option value="Cível">Cível</option>
-            <option value="Criminal">Criminal</option>
-            <option value="Tributário">Tributário</option>
-          </select>
-          
-          <select 
-            value={filtros.tipoDocumento[0] || ''}
-            onChange={(e) => setFiltros({...filtros, tipoDocumento: e.target.value ? [e.target.value] : []})}
-            className="px-3 py-2 border rounded-lg bg-background"
-          >
-            <option value="">Tipo de Documento</option>
-            <option value="Jurisprudência">Jurisprudência</option>
-            <option value="Acórdão">Acórdão</option>
-            <option value="Súmula">Súmula</option>
-            <option value="Legislação">Legislação</option>
-          </select>
-          
-          <select 
-            value={filtros.periodo}
-            onChange={(e) => setFiltros({...filtros, periodo: e.target.value})}
-            className="px-3 py-2 border rounded-lg bg-background"
-          >
-            <option value="todos">Período</option>
-            <option value="1m">Último mês</option>
-            <option value="6m">Últimos 6 meses</option>
-            <option value="1y">Último ano</option>
-            <option value="5y">Últimos 5 anos</option>
-          </select>
-          
-          <FiltrosAvancados
-            filtros={filtros}
-            onFiltrosChange={setFiltros}
-            onLimpar={limparFiltros}
-          />
-        </div>
-      </div>
-
-      {!query && (
-        <div className="bg-accent/50 border border-border rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium mb-2">💡 Sugestões populares:</p>
-          <div className="flex flex-wrap gap-2">
-            {sugestoesPopulares.map(sugestao => (
-              <button
-                key={sugestao}
-                onClick={() => handleSearch(sugestao)}
-                className="px-3 py-1 bg-card hover:bg-accent border border-border rounded-full text-sm transition-colors"
-              >
-                {sugestao}
-              </button>
-            ))}
+            <button
+              onClick={handleGenerateAnalysis}
+              disabled={isGenerating || !query || (jurisprudence.length === 0 && legislation.length === 0)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Analisando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Análise com IA
+                </>
+              )}
+            </button>
           </div>
-        </div>
-      )}
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {['tudo', 'jurisprudencia', 'legislacao', 'sumula', 'doutrina'].map(cat => (
-          <Button
-            key={cat}
-            onClick={() => setCategoria(cat)}
-            variant={categoria === cat ? 'default' : 'outline'}
-            className="whitespace-nowrap"
-          >
-            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-          </Button>
-        ))}
-      </div>
-
-      {query && (
-        <div className="mb-4 text-muted-foreground">
-          {buscando ? (
-            'Buscando...'
-          ) : (
-            `${resultadosFiltrados.length} resultado(s) encontrado(s) para "${query}"`
-          )}
-        </div>
-      )}
-
-      <div className="space-y-4 mb-8">
-        {buscando ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Buscando documentos...</p>
-          </div>
-        ) : resultadosAtuais.length > 0 ? (
-          resultadosAtuais.map(resultado => (
-            <ResultadoBusca
-              key={resultado.id}
-              resultado={resultado}
-              onAnalisarIA={handleAnalisarIA}
-              onCasosSimilares={handleCasosSimilares}
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ex: prescrição quinquenal, prazo recursal, execução trabalhista..."
+              className="w-full h-14 pl-12 pr-32 rounded-xl border-2 border-neutral-200 bg-white text-base font-medium text-neutral-900 placeholder:text-neutral-500 transition-all focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-100"
             />
-          ))
-        ) : (
-          <div className="text-center py-12 bg-card rounded-lg shadow border border-border">
-            <p className="text-lg">Nenhum resultado encontrado</p>
-            <p className="text-muted-foreground mt-2">Tente ajustar os filtros ou termos de busca</p>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
+              >
+                <Filter className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">Filtros</span>
+              </button>
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="px-6 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
+              >
+                {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
+              </button>
+            </div>
+          </form>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mt-6">
+            {[
+              { id: 'all', label: 'Todos', icon: BookOpen },
+              { id: 'jurisprudence', label: 'Jurisprudência', icon: Scale },
+              { id: 'legislation', label: 'Legislação', icon: FileText }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const count = tab.id === 'jurisprudence' ? jurisprudence.length : 
+                           tab.id === 'legislation' ? legislation.length : 
+                           jurisprudence.length + legislation.length;
+              
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                  {query && count > 0 && (
+                    <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
       </div>
 
-      {totalPaginas > 1 && (
-        <div className="flex justify-center items-center gap-2">
-          <Button
-            onClick={() => setPaginaAtual(Math.max(1, paginaAtual - 1))}
-            disabled={paginaAtual === 1}
-            variant="outline"
-          >
-            Anterior
-          </Button>
-          
-          {Array.from({ length: Math.min(5, totalPaginas) }, (_, i) => {
-            const pagina = i + 1;
-            return (
-              <Button
-                key={pagina}
-                onClick={() => setPaginaAtual(pagina)}
-                variant={paginaAtual === pagina ? 'default' : 'outline'}
-              >
-                {pagina}
-              </Button>
-            );
-          })}
-          
-          {totalPaginas > 5 && <span>...</span>}
-          
-          <Button
-            onClick={() => setPaginaAtual(Math.min(totalPaginas, paginaAtual + 1))}
-            disabled={paginaAtual === totalPaginas}
-            variant="outline"
-          >
-            Próximo
-          </Button>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Results */}
+          <div className="lg:col-span-2 space-y-4">
+            {isSearching ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white rounded-xl p-6 border border-neutral-200 animate-pulse">
+                    <div className="h-6 bg-neutral-200 rounded w-3/4 mb-4" />
+                    <div className="h-4 bg-neutral-200 rounded w-full mb-2" />
+                    <div className="h-4 bg-neutral-200 rounded w-5/6" />
+                  </div>
+                ))}
+              </div>
+            ) : query && (jurisprudence.length > 0 || legislation.length > 0) ? (
+              <>
+                {(activeTab === 'all' || activeTab === 'jurisprudence') && 
+                  jurisprudence.map((item) => (
+                    <JurisprudenceCard key={item.id} data={item} />
+                  ))
+                }
+
+                {(activeTab === 'all' || activeTab === 'legislation') && 
+                  legislation.map((item) => (
+                    <LegislationCard key={item.id} data={item} />
+                  ))
+                }
+              </>
+            ) : query ? (
+              <div className="bg-white rounded-xl p-12 border border-neutral-200 text-center">
+                <Search className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                  Nenhum resultado encontrado
+                </h3>
+                <p className="text-neutral-600">
+                  Tente refinar sua busca ou usar outros termos
+                </p>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-xl p-12 border border-primary-200 text-center">
+                <Sparkles className="w-16 h-16 text-primary-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                  Comece sua pesquisa
+                </h3>
+                <p className="text-neutral-600 mb-6">
+                  Digite um tema jurídico para buscar em bases oficiais
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {popularSearches.map(term => (
+                    <button
+                      key={term}
+                      onClick={() => setQuery(term)}
+                      className="px-4 py-2 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors text-sm font-medium"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {aiAnalysis && showAnalysis && (
+              <AIAnalysisPanel analysis={aiAnalysis} />
+            )}
+
+            {query && (jurisprudence.length > 0 || legislation.length > 0) && (
+              <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 border border-primary-200">
+                <h3 className="text-lg font-bold text-neutral-900 mb-4">
+                  Estatísticas
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-700">Total</span>
+                    <span className="text-lg font-bold text-primary-600">
+                      {jurisprudence.length + legislation.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-700">Jurisprudência</span>
+                    <span className="text-lg font-bold text-primary-600">
+                      {jurisprudence.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-700">Legislação</span>
+                    <span className="text-lg font-bold text-primary-600">
+                      {legislation.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
