@@ -19,6 +19,7 @@ export interface Resultado {
 export interface Analise {
   resultado: string;
   valorCondenacao: string;
+  resumoExecutivo?: string;
   fundamentos: string[];
   pontosRelevantes: string[];
   probabilidadeReforma: string;
@@ -31,4 +32,20 @@ export interface Analise {
     probabilidadeSucesso: number;
     riscosIdentificados: number;
   };
+  analiseDetalhada?: {
+    contextoProcessual?: string;
+    tesesDefesa?: string[];
+    tesesAcusacao?: string[];
+    jurisprudenciaAplicavel?: string;
+    impactosPraticos?: string;
+  };
+  dataAnalise?: string;
+  documentoAnalisado?: {
+    id: string;
+    numero?: string;
+    titulo: string;
+    tribunal?: string;
+    area?: string;
+  };
+  avisoMock?: string;
 }
