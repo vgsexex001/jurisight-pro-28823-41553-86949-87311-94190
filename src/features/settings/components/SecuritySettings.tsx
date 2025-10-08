@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 
 export default function SecuritySettings() {
-  const { settings } = useSettings();
+  const { data: settings } = useSettings();
 
   const mockDevices: Array<{
     id: string;
@@ -83,7 +83,7 @@ export default function SecuritySettings() {
               </div>
               <div>
                 <p className="font-medium">
-                  {settings.security.twoFactorEnabled ? 'Ativado' : 'Desativado'}
+                  {settings?.security.twoFactorEnabled ? 'Ativado' : 'Desativado'}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Adicione uma camada extra de segurança à sua conta
@@ -91,7 +91,7 @@ export default function SecuritySettings() {
               </div>
             </div>
             <Button variant="outline">
-              {settings.security.twoFactorEnabled ? 'Desativar' : 'Ativar'}
+              {settings?.security.twoFactorEnabled ? 'Desativar' : 'Ativar'}
             </Button>
           </div>
         </div>

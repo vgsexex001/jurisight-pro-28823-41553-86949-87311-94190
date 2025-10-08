@@ -1,9 +1,11 @@
 import { useSettings } from '../hooks/useSettings';
+import { useUpdateSettings } from '../hooks/useUpdateSettings';
 import { Sun, Moon, Monitor, Check } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 export default function AppearanceSettings() {
-  const { settings, updateSettings } = useSettings();
+  const { data: settings } = useSettings();
+  const updateMutation = useUpdateSettings();
 
   const themes = [
     { id: 'light', label: 'Claro', icon: Sun },
@@ -34,14 +36,15 @@ export default function AppearanceSettings() {
         <div className="grid grid-cols-3 gap-4">
           {themes.map((theme) => {
             const Icon = theme.icon;
-            const isActive = settings.appearance.theme === theme.id;
+            const isActive = settings?.appearance.theme === theme.id;
 
             return (
               <button
                 key={theme.id}
-                onClick={() => updateSettings({ 
-                  appearance: { ...settings.appearance, theme: theme.id as any } 
-                })}
+              onClick={() => updateMutation.mutate({
+                section: 'appearance',
+                data: { ...settings?.appearance, theme: theme.id as any }
+              })}
                 className={`
                   p-6 border-2 rounded-lg transition-all
                   ${isActive 
@@ -71,14 +74,15 @@ export default function AppearanceSettings() {
         </h3>
         <div className="flex space-x-4">
           {accentColors.map((accent) => {
-            const isActive = settings.appearance.accentColor === accent.id;
+            const isActive = settings?.appearance.accentColor === accent.id;
 
             return (
               <button
                 key={accent.id}
-                onClick={() => updateSettings({ 
-                  appearance: { ...settings.appearance, accentColor: accent.id } 
-                })}
+              onClick={() => updateMutation.mutate({
+                section: 'appearance',
+                data: { ...settings?.appearance, accentColor: accent.id }
+              })}
                 className={`
                   relative w-16 h-16 rounded-full border-4 transition-all
                   ${isActive ? 'border-foreground scale-110' : 'border-transparent'}
@@ -104,12 +108,13 @@ export default function AppearanceSettings() {
           {(['small', 'medium', 'large'] as const).map((size) => (
             <button
               key={size}
-              onClick={() => updateSettings({ 
-                appearance: { ...settings.appearance, fontSize: size } 
-              })}
+            onClick={() => updateMutation.mutate({
+              section: 'appearance',
+              data: { ...settings?.appearance, fontSize: size }
+            })}
               className={`
                 p-4 border-2 rounded-lg transition-all
-                ${settings.appearance.fontSize === size
+                ${settings?.appearance.fontSize === size
                   ? 'border-primary bg-primary/5' 
                   : 'border-border hover:border-muted-foreground'
                 }
@@ -137,12 +142,13 @@ export default function AppearanceSettings() {
             </p>
           </div>
           <Switch
-            checked={settings.appearance.compactMode}
-            onCheckedChange={(checked) => updateSettings({ 
-              appearance: { 
-                ...settings.appearance, 
-                compactMode: checked 
-              } 
+            checked={settings?.appearance.compactMode}
+            onCheckedChange={(checked) => updateMutation.mutate({
+              section: 'appearance',
+              data: {
+                ...settings?.appearance,
+                compactMode: checked
+              }
             })}
           />
         </div>
@@ -158,12 +164,13 @@ export default function AppearanceSettings() {
             </p>
           </div>
           <Switch
-            checked={settings.appearance.sidebarCollapsed}
-            onCheckedChange={(checked) => updateSettings({ 
-              appearance: { 
-                ...settings.appearance, 
-                sidebarCollapsed: checked 
-              } 
+            checked={settings?.appearance.sidebarCollapsed}
+            onCheckedChange={(checked) => updateMutation.mutate({
+              section: 'appearance',
+              data: {
+                ...settings?.appearance,
+                sidebarCollapsed: checked
+              }
             })}
           />
         </div>

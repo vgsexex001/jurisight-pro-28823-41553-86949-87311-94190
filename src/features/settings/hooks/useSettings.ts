@@ -1,48 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { UserSettings, defaultSettings } from '@/types/settings';
-import { toast } from 'sonner';
 
 const SETTINGS_KEY = 'jurimetrics_settings';
 
 export const useSettings = () => {
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = () => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_KEY);
-      if (stored) {
-        setSettings(JSON.parse(stored));
+  return useQuery<UserSettings>({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      // Simular API call - substituir por chamada real ao backend
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      try {
+        const stored = localStorage.getItem(SETTINGS_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
       }
-    } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
-      toast.error('Erro ao carregar configurações');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateSettings = (updates: Partial<UserSettings>) => {
-    try {
-      const updated = { ...settings, ...updates };
-      setSettings(updated);
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
-      toast.success('Configurações atualizadas!');
-    } catch (error) {
-      console.error('Erro ao atualizar configurações:', error);
-      toast.error('Erro ao atualizar configurações');
-    }
-  };
-
-  const resetSettings = () => {
-    setSettings(defaultSettings);
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
-    toast.success('Configurações restauradas para o padrão');
-  };
-
-  return { settings, isLoading, updateSettings, resetSettings };
+      
+      // Retornar configurações padrão se não houver nada salvo
+      return defaultSettings;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
 };
