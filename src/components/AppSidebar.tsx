@@ -1,5 +1,6 @@
 import { BarChart3, FileText, TrendingUp, FolderKanban, Settings, LogOut, Key, Brain, Search, BookOpen, Bell } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +32,19 @@ const menuItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const navigate = useNavigate();
+  const [alertasNaoLidos, setAlertasNaoLidos] = useState(0);
+
+  useEffect(() => {
+    const atualizarAlertas = () => {
+      const alertas = JSON.parse(localStorage.getItem('alertas') || '[]');
+      const naoLidos = alertas.filter((a: any) => !a.lido && !a.arquivado).length;
+      setAlertasNaoLidos(naoLidos);
+    };
+
+    atualizarAlertas();
+    const interval = setInterval(atualizarAlertas, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -74,7 +88,16 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="w-4 h-4" />
-                      {open && <span>{item.title}</span>}
+                      {open && (
+                        <span className="flex items-center gap-2 flex-1">
+                          {item.title}
+                          {item.title === 'Alertas' && alertasNaoLidos > 0 && (
+                            <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                              {alertasNaoLidos > 9 ? '9+' : alertasNaoLidos}
+                            </span>
+                          )}
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
