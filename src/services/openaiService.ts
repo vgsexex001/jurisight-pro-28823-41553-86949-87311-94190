@@ -2,7 +2,30 @@ export class OpenAIAnalysisService {
   private apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || import.meta.env.VITE_OPENAI_API_KEY || '';
+    // Tentar pegar do localStorage primeiro
+    let chave = apiKey;
+    
+    if (!chave) {
+      try {
+        const integracoes = localStorage.getItem('integracoes');
+        if (integracoes) {
+          const parsed = JSON.parse(integracoes);
+          const openaiIntegracao = parsed.find((i: any) => i.id === 'openai');
+          if (openaiIntegracao && openaiIntegracao.apiKey) {
+            chave = openaiIntegracao.apiKey;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao ler integrações:', error);
+      }
+    }
+
+    // Se ainda não tiver, tentar variável de ambiente
+    if (!chave) {
+      chave = import.meta.env.VITE_OPENAI_API_KEY || '';
+    }
+
+    this.apiKey = chave;
   }
 
   async analisarDocumentoJuridico(documento: any): Promise<any> {

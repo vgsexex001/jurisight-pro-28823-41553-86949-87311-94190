@@ -17,8 +17,12 @@ import {
   Filter,
   BookOpen,
   Scale,
-  Brain
+  Brain,
+  CheckCircle,
+  AlertCircle,
+  Key
 } from "lucide-react";
+import { getOpenAIService } from "@/services/openaiService";
 import { AlertasJuridicos } from "@/components/AlertasJuridicos";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -60,9 +64,12 @@ export default function Index() {
   const [selectedTribunal, setSelectedTribunal] = useState('');
   const [selectedArea, setSelectedArea] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [iaAtiva, setIaAtiva] = useState(false);
 
   useEffect(() => {
     checkUser();
+    const service = getOpenAIService();
+    setIaAtiva(service.isConfigured());
   }, []);
 
   const checkUser = async () => {
@@ -194,6 +201,34 @@ export default function Index() {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Visão geral dos seus processos jurídicos</p>
       </div>
+
+      {/* Indicador de status da IA */}
+      {iaAtiva ? (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-green-900">IA OpenAI Ativa</p>
+            <p className="text-xs text-green-700">Análises com inteligência artificial em tempo real</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-yellow-900">IA não configurada</p>
+            <p className="text-xs text-yellow-700">
+              Usando análises simuladas. 
+              <button 
+                onClick={() => navigate('/integrations')}
+                className="ml-1 underline hover:text-yellow-900 inline-flex items-center gap-1"
+              >
+                <Key className="w-3 h-3" />
+                Configure a OpenAI
+              </button>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
