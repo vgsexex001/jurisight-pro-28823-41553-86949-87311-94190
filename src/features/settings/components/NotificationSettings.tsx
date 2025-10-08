@@ -26,9 +26,12 @@ export default function NotificationSettings() {
       section: 'notifications',
       data: {
         ...settings?.notifications,
-        quietHours: {
-          ...settings?.notifications.quietHours,
-          enabled: !settings?.notifications.quietHours.enabled
+        preferences: {
+          ...settings?.notifications.preferences,
+          quietHours: {
+            ...settings?.notifications.preferences.quietHours,
+            enabled: !settings?.notifications.preferences.quietHours.enabled
+          }
         }
       }
     });
@@ -39,9 +42,12 @@ export default function NotificationSettings() {
       section: 'notifications',
       data: {
         ...settings?.notifications,
-        quietHours: {
-          ...settings?.notifications.quietHours,
-          [field]: value
+        preferences: {
+          ...settings?.notifications.preferences,
+          quietHours: {
+            ...settings?.notifications.preferences.quietHours,
+            [field]: value
+          }
         }
       }
     });
@@ -85,16 +91,16 @@ export default function NotificationSettings() {
           <Moon className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Horário Silencioso</h3>
         </div>
-        <ToggleItem label="Ativar horário silencioso" description="Não receber notificações neste período" checked={settings?.notifications.quietHours.enabled} onChange={toggleQuietHours} />
-        {settings?.notifications.quietHours.enabled && (
+        <ToggleItem label="Ativar horário silencioso" description="Não receber notificações neste período" checked={settings?.notifications.preferences.quietHours.enabled} onChange={toggleQuietHours} />
+        {settings?.notifications.preferences.quietHours.enabled && (
           <div className="grid grid-cols-2 gap-4 mt-4 ml-8">
             <div>
               <label className="block text-sm font-medium mb-2">Início</label>
-              <input type="time" value={settings.notifications.quietHours.start} onChange={(e) => updateTime('start', e.target.value)} className="w-full px-4 py-2 border rounded-lg" />
+              <input type="time" value={settings.notifications.preferences.quietHours.start} onChange={(e) => updateTime('start', e.target.value)} className="w-full px-4 py-2 border rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Término</label>
-              <input type="time" value={settings.notifications.quietHours.end} onChange={(e) => updateTime('end', e.target.value)} className="w-full px-4 py-2 border rounded-lg" />
+              <input type="time" value={settings.notifications.preferences.quietHours.end} onChange={(e) => updateTime('end', e.target.value)} className="w-full px-4 py-2 border rounded-lg" />
             </div>
           </div>
         )}
