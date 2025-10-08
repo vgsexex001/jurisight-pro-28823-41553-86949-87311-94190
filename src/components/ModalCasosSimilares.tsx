@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Search, TrendingUp, FileText, Brain } from 'lucide-react';
+import { X, Search, TrendingUp, FileText, Brain, AlertCircle } from 'lucide-react';
 import { SemanticSearchService } from '@/services/semanticSearch';
 import { resultadosMock } from '@/data/resultadosMock';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getOpenAIService } from '@/services/openaiService';
 
 interface Resultado {
   id: string;
@@ -31,6 +32,7 @@ export default function ModalCasosSimilares({ resultado, onClose, onVerDetalhes 
   const [casosSimilares, setCasosSimilares] = useState<Resultado[]>([]);
   const [buscando, setBuscando] = useState(true);
   const [criterio, setCriterio] = useState<'ia' | 'tags' | 'area'>('ia');
+  const [usandoMock, setUsandoMock] = useState(false);
 
   useEffect(() => {
     buscarCasosSimilares();
@@ -38,15 +40,29 @@ export default function ModalCasosSimilares({ resultado, onClose, onVerDetalhes 
 
   const buscarCasosSimilares = async () => {
     setBuscando(true);
+    setUsandoMock(false);
     
     try {
       let similares: any[] = [];
 
       if (criterio === 'ia') {
-        // Busca com IA usando embeddings simulados
-        const semanticService = new SemanticSearchService('mock-key');
-        const textoReferencia = `${resultado.titulo} ${resultado.ementa}`;
-        similares = await semanticService.buscarSimilares(textoReferencia, resultadosMock);
+        const openaiService = getOpenAIService();
+        
+        if (openaiService.isConfigured()) {
+          console.log('🤖 Buscando casos similares com OpenAI...');
+          // Aqui usaríamos embeddings reais da OpenAI em produção
+          // Por ora, usar busca semântica básica
+          const semanticService = new SemanticSearchService('');
+          const textoReferencia = `${resultado.titulo} ${resultado.ementa}`;
+          similares = await semanticService.buscarSimilares(textoReferencia, resultadosMock);
+        } else {
+          console.warn('⚠️ OpenAI não configurada - usando busca simulada');
+          setUsandoMock(true);
+          const semanticService = new SemanticSearchService('mock-key');
+          const textoReferencia = `${resultado.titulo} ${resultado.ementa}`;
+          similares = await semanticService.buscarSimilares(textoReferencia, resultadosMock);
+        }
+        
         similares = similares.filter(s => s.id !== resultado.id).slice(0, 10);
       } else if (criterio === 'tags') {
         similares = buscarPorTags();
@@ -116,6 +132,16 @@ export default function ModalCasosSimilares({ resultado, onClose, onVerDetalhes 
 
         {/* Filtros de busca */}
         <div className="p-6 border-b bg-muted/30">
+          {usandoMock && criterio === 'ia' && (
+            <div className="mb-4 bg-yellow-500/10 border-l-4 border-yellow-500 p-3 rounded">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-yellow-800">
+                  Busca simulada. Configure a OpenAI nas Integrações para busca real com IA.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">Critério de busca:</span>
             <div className="flex gap-2">

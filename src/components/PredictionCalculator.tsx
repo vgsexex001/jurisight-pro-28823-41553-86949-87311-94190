@@ -1,21 +1,7 @@
 import { useState } from 'react';
-import { Calculator, TrendingUp, Loader2 } from 'lucide-react';
+import { Calculator, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
-interface PredictionData {
-  tipoAcao: string;
-  tribunal: string;
-  valor: number;
-  descricao: string;
-}
-
-interface PredictionResult {
-  probabilidade: number;
-  tempo: number;
-  valor: number;
-  recomendacoes: string[];
-  precedentes: string[];
-}
+import { predictionService, PredictionData, PredictionResult } from '@/services/predictionService';
 
 export default function PredictionCalculator() {
   const [dados, setDados] = useState<PredictionData>({
@@ -40,25 +26,12 @@ export default function PredictionCalculator() {
     setCalculando(true);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/prever-resultado`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-        },
-        body: JSON.stringify(dados)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao calcular previsão');
-      }
-      
-      const resultado = await response.json();
+      const resultado = await predictionService.calcularPrevisao(dados);
       setPrevisao(resultado);
       
       toast({
         title: 'Previsão calculada',
-        description: 'Análise preditiva concluída com sucesso',
+        description: resultado.avisoMock ? 'Usando análise simulada' : 'Análise preditiva concluída com sucesso',
       });
     } catch (error) {
       console.error('Erro:', error);
@@ -157,6 +130,14 @@ export default function PredictionCalculator() {
       {/* Resultado da Previsão */}
       {previsao && (
         <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {previsao.avisoMock && (
+            <div className="mb-4 bg-yellow-500/10 border-l-4 border-yellow-500 p-3 rounded">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-yellow-800">{previsao.avisoMock}</p>
+              </div>
+            </div>
+          )}
           <h4 className="font-semibold text-lg mb-4">Resultado da Previsão</h4>
           
           <div className="grid grid-cols-3 gap-4 mb-4">

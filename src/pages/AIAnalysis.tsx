@@ -1,15 +1,9 @@
 import { useState } from 'react';
-import { Brain, Zap, TrendingUp, Upload, FileText, Loader2 } from 'lucide-react';
+import { Brain, Zap, TrendingUp, Upload, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { documentAnalysisService, DocumentAnalysisResult } from '@/services/documentAnalysisService';
 
-interface AnalysisResult {
-  resultado: string;
-  valor: number;
-  probabilidadeReforma: string;
-  fundamentos: string[];
-  pontosRelevantes: string[];
-  tags: string[];
-}
+type AnalysisResult = DocumentAnalysisResult;
 
 export default function AIAnalysis() {
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -31,31 +25,19 @@ export default function AIAnalysis() {
     setAnalisando(true);
     
     try {
-      const formData = new FormData();
+      let textoParaAnalisar = textoManual;
+      
+      // Se houver arquivo, ler o conteúdo
       if (arquivo) {
-        formData.append('file', arquivo);
-      } else {
-        formData.append('texto', textoManual);
+        textoParaAnalisar = await arquivo.text();
       }
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analisar-documento`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao analisar documento');
-      }
-      
-      const data = await response.json();
-      setResultado(data);
+      const resultado = await documentAnalysisService.analisarTexto(textoParaAnalisar);
+      setResultado(resultado);
       
       toast({
         title: 'Análise concluída',
-        description: 'Documento analisado com sucesso pela IA',
+        description: resultado.avisoMock ? 'Usando análise simulada' : 'Documento analisado com sucesso pela IA',
       });
     } catch (error) {
       console.error('Erro:', error);
@@ -185,6 +167,19 @@ export default function AIAnalysis() {
       {/* Resultados da Análise */}
       {resultado && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Aviso se for mock */}
+          {resultado.avisoMock && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-4 rounded">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-yellow-900 font-medium">Análise Simulada</p>
+                  <p className="text-yellow-800 text-sm mt-1">{resultado.avisoMock}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Card de Resultado Principal */}
           <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
