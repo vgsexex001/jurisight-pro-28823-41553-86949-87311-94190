@@ -1,24 +1,44 @@
-import { FileText, Download, Search, Filter } from 'lucide-react';
+import { FileText, Download, Search, Eye, Star } from 'lucide-react';
 import { modelos } from '@/data/juridicalData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import TemplatePreviewModal from '@/components/TemplatePreviewModal';
+import { templateDownloadService, type DownloadFormat } from '@/services/templateDownloadService';
+import { toast } from '@/hooks/use-toast';
 
 export default function ModelosPeticoes() {
   const [busca, setBusca] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<typeof modelos[0] | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const modelosFiltrados = modelos.filter(modelo => {
-    const matchBusca = !busca || 
-      modelo.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      modelo.descricao.toLowerCase().includes(busca.toLowerCase());
-    
-    const matchCategoria = !categoriaFiltro || modelo.categoria === categoriaFiltro;
-    
-    return matchBusca && matchCategoria;
-  });
+  const modelosFiltrados = useMemo(() => {
+    return modelos.filter(modelo => {
+      const matchBusca = !busca || 
+        modelo.nome.toLowerCase().includes(busca.toLowerCase()) ||
+        modelo.descricao.toLowerCase().includes(busca.toLowerCase()) ||
+        modelo.tags.some(tag => tag.toLowerCase().includes(busca.toLowerCase()));
+      
+      const matchCategoria = !categoriaFiltro || modelo.categoria === categoriaFiltro;
+      
+      return matchBusca && matchCategoria;
+    });
+  }, [busca, categoriaFiltro]);
 
-  const categorias = [...new Set(modelos.map(m => m.categoria))];
+  const categorias = useMemo(() => [...new Set(modelos.map(m => m.categoria))], []);
+
+  const handlePreview = (modelo: typeof modelos[0]) => {
+    setSelectedTemplate(modelo);
+    setIsPreviewOpen(true);
+  };
+
+  const handleDownload = (templateId: number, format: DownloadFormat) => {
+    const template = modelos.find(m => m.id === templateId);
+    if (template) {
+      templateDownloadService.downloadTemplate(templateId, template.nome, format);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -117,12 +137,20 @@ export default function ModelosPeticoes() {
             </div>
             
             <div className="flex gap-2">
-              <Button className="flex-1">
-                <Download className="w-4 h-4 mr-2" />
-                Baixar
+              <Button 
+                className="flex-1"
+                onClick={() => handlePreview(modelo)}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Visualizar
               </Button>
-              <Button variant="outline" size="icon">
-                <Search className="w-4 h-4" />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleDownload(modelo.id, 'docx')}
+                title="Download rápido DOCX"
+              >
+                <Download className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -138,6 +166,14 @@ export default function ModelosPeticoes() {
           </p>
         </div>
       )}
+
+      {/* Modal de Preview */}
+      <TemplatePreviewModal
+        template={selectedTemplate}
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        onDownload={handleDownload}
+      />
     </div>
   );
 }
