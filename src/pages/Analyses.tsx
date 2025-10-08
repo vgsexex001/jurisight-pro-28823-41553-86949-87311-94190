@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StatCard } from "@/components/StatCard";
+import { MetricCardModern } from "@/components/ui/metric-card-modern";
 import { TrendingUp, Clock, DollarSign, Target, Download, FileDown, FileSpreadsheet, FileText } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { toast } from "@/hooks/use-toast";
 
 export default function Analyses() {
@@ -167,32 +167,39 @@ export default function Analyses() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
+        <MetricCardModern
           title="Taxa de Sucesso"
+          subtitle="Últimos 6 meses"
           value={`${successRate}%`}
           icon={Target}
-          gradient="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white"
-          trend={{ value: 5.2, isPositive: true }}
+          gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          change="+5.2%"
+          trend="up"
         />
-        <StatCard
+        <MetricCardModern
           title="Tempo Médio"
+          subtitle="Resolução"
           value={`${avgDuration}d`}
           icon={Clock}
-          gradient="bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-          trend={{ value: 8.1, isPositive: false }}
+          gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+          change="-8 dias"
+          trend="up"
         />
-        <StatCard
+        <MetricCardModern
           title="Valor Médio"
+          subtitle="Por processo"
           value={`R$ ${(avgAmount / 1000).toFixed(0)}k`}
           icon={DollarSign}
-          gradient="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
-          trend={{ value: 12.4, isPositive: true }}
+          gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+          change="+12.4%"
+          trend="up"
         />
-        <StatCard
+        <MetricCardModern
           title="Total Processos"
+          subtitle="Ativos"
           value={totalProcesses}
           icon={TrendingUp}
-          gradient="bg-gradient-to-br from-purple-500 to-purple-600 text-white"
+          gradient="linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)"
         />
       </div>
 
