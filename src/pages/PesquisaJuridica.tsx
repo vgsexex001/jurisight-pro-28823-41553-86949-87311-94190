@@ -152,29 +152,53 @@ export default function PesquisaJuridica() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Tribunal</option>
-            <option>STF</option>
-            <option>STJ</option>
-            <option>TST</option>
+          <select 
+            value={filtros.tribunal[0] || ''}
+            onChange={(e) => setFiltros({...filtros, tribunal: e.target.value ? [e.target.value] : []})}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Tribunal</option>
+            <option value="STF">STF</option>
+            <option value="STJ">STJ</option>
+            <option value="TST">TST</option>
+            <option value="TJSP">TJSP</option>
+            <option value="TRT 2ª">TRT 2ª</option>
           </select>
           
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Área do Direito</option>
-            <option>Trabalhista</option>
-            <option>Cível</option>
+          <select 
+            value={filtros.area[0] || ''}
+            onChange={(e) => setFiltros({...filtros, area: e.target.value ? [e.target.value] : []})}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Área do Direito</option>
+            <option value="Trabalhista">Trabalhista</option>
+            <option value="Cível">Cível</option>
+            <option value="Criminal">Criminal</option>
+            <option value="Tributário">Tributário</option>
           </select>
           
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Tipo de Documento</option>
-            <option>Acórdão</option>
-            <option>Súmula</option>
+          <select 
+            value={filtros.tipoDocumento[0] || ''}
+            onChange={(e) => setFiltros({...filtros, tipoDocumento: e.target.value ? [e.target.value] : []})}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Tipo de Documento</option>
+            <option value="Jurisprudência">Jurisprudência</option>
+            <option value="Acórdão">Acórdão</option>
+            <option value="Súmula">Súmula</option>
+            <option value="Legislação">Legislação</option>
           </select>
           
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Período</option>
-            <option>Último mês</option>
-            <option>Último ano</option>
+          <select 
+            value={filtros.periodo}
+            onChange={(e) => setFiltros({...filtros, periodo: e.target.value})}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="todos">Período</option>
+            <option value="1m">Último mês</option>
+            <option value="6m">Últimos 6 meses</option>
+            <option value="1y">Último ano</option>
+            <option value="5y">Últimos 5 anos</option>
           </select>
           
           <FiltrosAvancados

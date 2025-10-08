@@ -7,7 +7,7 @@ import ModalInteiroTeor from './ModalInteiroTeor';
 import ModalCasosSimilares from './ModalCasosSimilares';
 import ModalAnaliseIA from './ModalAnaliseIA';
 
-interface Resultado {
+export interface Resultado {
   id: string;
   tipo: 'jurisprudencia' | 'legislacao' | 'sumula' | 'doutrina';
   tribunal?: string;

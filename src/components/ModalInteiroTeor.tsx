@@ -2,8 +2,22 @@ import { useState } from 'react';
 import { X, Download, Printer, Copy, Share2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface Resultado {
+  id: string;
+  tipo: string;
+  tribunal?: string;
+  numero?: string;
+  titulo: string;
+  ementa: string;
+  relator?: string;
+  data: string;
+  visualizacoes?: number;
+  area: string;
+  tags: string[];
+}
+
 interface ModalInteiroTeorProps {
-  resultado: any;
+  resultado: Resultado;
   onClose: () => void;
 }
 

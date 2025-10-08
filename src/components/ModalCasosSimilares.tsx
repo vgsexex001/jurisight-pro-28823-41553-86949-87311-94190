@@ -5,14 +5,30 @@ import { resultadosMock } from '@/data/resultadosMock';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+interface Resultado {
+  id: string;
+  tipo: string;
+  tribunal?: string;
+  numero?: string;
+  titulo: string;
+  ementa: string;
+  relator?: string;
+  data: string;
+  visualizacoes?: number;
+  area: string;
+  tags: string[];
+  similaridade?: number;
+  score?: number;
+}
+
 interface ModalCasosSimilaresProps {
-  resultado: any;
+  resultado: Resultado;
   onClose: () => void;
-  onVerDetalhes: (resultado: any) => void;
+  onVerDetalhes: (resultado: Resultado) => void;
 }
 
 export default function ModalCasosSimilares({ resultado, onClose, onVerDetalhes }: ModalCasosSimilaresProps) {
-  const [casosSimilares, setCasosSimilares] = useState<any[]>([]);
+  const [casosSimilares, setCasosSimilares] = useState<Resultado[]>([]);
   const [buscando, setBuscando] = useState(true);
   const [criterio, setCriterio] = useState<'ia' | 'tags' | 'area'>('ia');
 

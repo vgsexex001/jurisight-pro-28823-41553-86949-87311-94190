@@ -4,14 +4,45 @@ import { OpenAIAnalysisService } from '@/services/openaiService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+interface Resultado {
+  id: string;
+  tipo: string;
+  tribunal?: string;
+  numero?: string;
+  titulo: string;
+  ementa: string;
+  relator?: string;
+  data: string;
+  visualizacoes?: number;
+  area: string;
+  tags: string[];
+}
+
+interface Analise {
+  resultado: string;
+  valorCondenacao: string;
+  fundamentos: string[];
+  pontosRelevantes: string[];
+  probabilidadeReforma: string;
+  justificativaReforma?: string;
+  tags: string[];
+  recomendacoes: string[];
+  precedentesRelacionados?: string[];
+  pontuacao?: {
+    solidezArgumentacao: number;
+    probabilidadeSucesso: number;
+    riscosIdentificados: number;
+  };
+}
+
 interface ModalAnaliseIAProps {
-  resultado: any;
+  resultado: Resultado;
   onClose: () => void;
 }
 
 export default function ModalAnaliseIA({ resultado, onClose }: ModalAnaliseIAProps) {
   const [analisando, setAnalisando] = useState(true);
-  const [analise, setAnalise] = useState<any>(null);
+  const [analise, setAnalise] = useState<Analise | null>(null);
 
   useEffect(() => {
     realizarAnalise();

@@ -41,15 +41,25 @@ const COLORS = ['#10B981', '#EF4444', '#F59E0B', '#6B7280'];
 export default function Index() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [stats, setStats] = useState({
     totalProcesses: 0,
     successRate: 0,
     avgDuration: 0,
     avgAmount: 0
   });
-  const [resultData, setResultData] = useState<any[]>([]);
-  const [actionTypeData, setActionTypeData] = useState<any[]>([]);
+  
+  interface ChartData {
+    name: string;
+    value?: number;
+    count?: number;
+  }
+  
+  const [resultData, setResultData] = useState<ChartData[]>([]);
+  const [actionTypeData, setActionTypeData] = useState<ChartData[]>([]);
+  const [selectedTribunal, setSelectedTribunal] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
 
   useEffect(() => {
     checkUser();
@@ -263,34 +273,54 @@ export default function Index() {
 
         {/* Filtros rápidos */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Tribunal</option>
-            <option>STF</option>
-            <option>STJ</option>
-            <option>TST</option>
-            <option>TJSP</option>
-            <option>TRT 2ª</option>
+          <select 
+            value={selectedTribunal}
+            onChange={(e) => setSelectedTribunal(e.target.value)}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Tribunal</option>
+            <option value="STF">STF</option>
+            <option value="STJ">STJ</option>
+            <option value="TST">TST</option>
+            <option value="TJSP">TJSP</option>
+            <option value="TRT 2ª">TRT 2ª</option>
           </select>
           
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Área do Direito</option>
-            <option>Trabalhista</option>
-            <option>Cível</option>
-            <option>Criminal</option>
-            <option>Tributário</option>
-            <option>Família</option>
+          <select 
+            value={selectedArea}
+            onChange={(e) => setSelectedArea(e.target.value)}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Área do Direito</option>
+            <option value="Trabalhista">Trabalhista</option>
+            <option value="Cível">Cível</option>
+            <option value="Criminal">Criminal</option>
+            <option value="Tributário">Tributário</option>
+            <option value="Família">Família</option>
           </select>
           
-          <select className="px-3 py-2 border rounded-lg bg-background">
-            <option>Período</option>
-            <option>Última semana</option>
-            <option>Último mês</option>
-            <option>Últimos 6 meses</option>
-            <option>Último ano</option>
-            <option>Últimos 5 anos</option>
+          <select 
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="px-3 py-2 border rounded-lg bg-background"
+          >
+            <option value="">Período</option>
+            <option value="1w">Última semana</option>
+            <option value="1m">Último mês</option>
+            <option value="6m">Últimos 6 meses</option>
+            <option value="1y">Último ano</option>
+            <option value="5y">Últimos 5 anos</option>
           </select>
           
-          <Button variant="outline" className="flex items-center justify-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-center gap-2"
+            onClick={() => {
+              if (selectedTribunal || selectedArea || selectedPeriod) {
+                navigate(`/pesquisa?tribunal=${selectedTribunal}&area=${selectedArea}&periodo=${selectedPeriod}`);
+              }
+            }}
+          >
             <Filter className="w-4 h-4" />
             Mais Filtros
           </Button>

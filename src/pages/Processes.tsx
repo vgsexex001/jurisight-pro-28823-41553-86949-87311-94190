@@ -25,7 +25,26 @@ import { toast } from "@/hooks/use-toast";
 
 export default function Processes() {
   const navigate = useNavigate();
-  const [processes, setProcesses] = useState<any[]>([]);
+  
+  interface Process {
+    id: string;
+    process_number: string;
+    tribunal: string;
+    vara: string | null;
+    action_type: string;
+    plaintiff: string;
+    defendant: string;
+    distribution_date: string;
+    judgment_date: string | null;
+    result: string;
+    status: string;
+    amount: number | null;
+    summary: string | null;
+    created_at: string;
+    updated_at: string;
+  }
+  
+  const [processes, setProcesses] = useState<Process[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterResult, setFilterResult] = useState<string>("all");
@@ -254,7 +273,7 @@ export default function Processes() {
                         <TableCell>{getResultBadge(process.result)}</TableCell>
                         <TableCell className="text-right">
                           {process.amount 
-                            ? `R$ ${parseFloat(process.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                            ? `R$ ${Number(process.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                             : '-'
                           }
                         </TableCell>
